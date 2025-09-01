@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Identity.Client;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
@@ -17,14 +18,16 @@ namespace E_CommerceApp.Controllers
     public class UserController : ControllerBase
     {
         private readonly CityService _cityService;
+        private readonly AddressService _addressService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
-        public UserController(CityService cityService, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+        public UserController(CityService cityService, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, AddressService addressService)
         {
             _cityService = cityService;
             _userManager = userManager;
             _roleManager = roleManager;
+            _addressService = addressService;
         }
 
         [HttpGet("view-profile/{Id}")]
@@ -132,6 +135,85 @@ namespace E_CommerceApp.Controllers
                 }
             }
             return BadRequest(ModelState);
+        }
+
+        [HttpPost("add-address/{address}")]
+        [Authorize]
+        public async Task<IActionResult> AddAddress(string address) {
+
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserName = User.FindFirstValue(ClaimTypes.Name);
+
+            UserAddress userAddress = new UserAddress();
+            userAddress.Address = address;
+            userAddress.UserId = currentUserId;
+
+            int result = await _addressService.AddAddress(userAddress);
+            if (result > 0) {
+                return Ok($"Address added for user {currentUserName}");
+            }
+            return BadRequest($"Address was not added for user {currentUserName}");
+
+        }
+
+        [HttpDelete("remove-address/{addressId}")]
+        [Authorize]
+        public async Task<IActionResult> RemoveAddress(string addressId) {
+
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserName = User.FindFirstValue(ClaimTypes.Name);
+
+            var address = await _addressService.GetById(addressId);
+            if (address == null) return NotFound("Address not found");
+
+            int result = await _addressService.RemoveAddress(address);
+            if (result > 0)
+            {
+                return Ok($"Address {address.Address} removed from user {currentUserName}");
+            }
+            return BadRequest($"Address {address.Address} was not removed from user {currentUserName}");
+        }
+
+        [HttpPut("update-address/")]
+        [Authorize]
+        public async Task<IActionResult> UpdateAddress(AddressDTO addressDTO) {
+
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserName = User.FindFirstValue(ClaimTypes.Name);
+
+            var address = await _addressService.GetById(addressDTO.Id);
+            if (address == null) return NotFound("Address not found");
+
+            string oldAddress = address.Address;
+            address.Address = addressDTO.Address;
+            int result = await _addressService.UpdateAddress(address);
+            if (result > 0) {
+                return Ok($"address for user {currentUserName} updated from {oldAddress} to {address.Address}");
+            }
+            return BadRequest("Address was not updated");
+        }
+
+        [HttpGet("get-addresses")]
+        [Authorize]
+        public async Task<IActionResult> GetAddresses() {
+
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserName = User.FindFirstValue(ClaimTypes.Name);
+
+            List<UserAddress>? addresses = await _addressService.GetAll();
+            if (addresses == null) return BadRequest($"No addresses found for user {currentUserName}");
+
+            List<AddressDTO> addressesDTO = new List<AddressDTO>();
+            foreach (var address in addresses)
+            {
+                AddressDTO addressDTO = new AddressDTO();
+                addressDTO.Id = address.Id;
+                addressDTO.Address = address.Address;
+                addressesDTO.Add(addressDTO);
+            }
+
+            return Ok(addressesDTO);
+
         }
 
         [Authorize(Roles = "Admin")]

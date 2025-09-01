@@ -4,9 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace E_CommerceApp.Repositories
 {
-    public class AddressRepositorySqlServer : Repository<UserAddresses>
+    public class AddressRepository : Repository<UserAddress>, IAddressRepository
     {
-        public AddressRepositorySqlServer(ApplicationDbContext dbContext) : base(dbContext) {
+        public AddressRepository(ApplicationDbContext context) : base(context)
+        {
         }
     }
 }

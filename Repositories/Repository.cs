@@ -32,12 +32,12 @@ namespace E_CommerceApp.Repositories
         }
 
         public async Task<T?> GetById(string Id) {
-            return await _dbSet.FindAsync(Id);
+            return await _dbSet.AsNoTracking().FirstOrDefaultAsync(e => EF.Property<string>(e,"Id")==Id);
             //FindAsync returns null if nothing is found
         }
 
         public async Task<List<T>> GetAll() {
-            return await _dbSet.ToListAsync<T>();
+            return await _dbSet.AsNoTracking().ToListAsync<T>();
         }
 
         public void Update(T entity) {
