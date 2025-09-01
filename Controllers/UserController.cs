@@ -30,22 +30,17 @@ namespace E_CommerceApp.Controllers
             _addressService = addressService;
         }
 
-        [HttpGet("view-profile/{Id}")]
+        [HttpGet("view-profile")]
         [Authorize]
-        public async Task<IActionResult> ViewProfile(string Id)
+        public async Task<IActionResult> ViewProfile()
         {
 
-            var CurrentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             //User here is ClaimPrinciple User object inside the ControllerBase class
             //When JWT is processed inside the middleware its claims are stored in memory inside the
             //ClaimPrinciple User object
 
-            if (CurrentUserId != Id && !User.IsInRole("Admin"))
-            {
-                return Forbid();
-            }
-
-            var user = await _userManager.FindByIdAsync(Id);
+            var user = await _userManager.FindByIdAsync(currentUserId);
             if (user == null) return NotFound("User Not Found");
 
             string CityName = await _cityService.GetById(user.CityId);
@@ -56,7 +51,9 @@ namespace E_CommerceApp.Controllers
             userProfileDTO.UserName = user.UserName;
             userProfileDTO.Email = user.Email;
             userProfileDTO.PhoneNumber = user.PhoneNumber;
+            userProfileDTO.JoinDate = user.JoinDate;
             userProfileDTO.CityName = CityName;
+
 
             //If the id sent is the current logged in user then we don't need to check if user is null
             //because this implicitly means the user exists
@@ -67,13 +64,151 @@ namespace E_CommerceApp.Controllers
 
         }
 
-        [HttpPut("update-profile/{Id}")]
-        [Authorize]
-        public async Task<IActionResult> UpdateProfile(string Id, UserProfileDTO NewProfile)
+        //Since UserNames are unique this is doable also UX wise username makes more sense in the url than
+        //a guid
+        [HttpGet("view-user-profile/{userName}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ViewUserProfile(string userName)
         {
+
+            if (!User.IsInRole("Admin")) return Forbid();
+
+            var user = await _userManager.FindByNameAsync(userName);
+            if (user == null) return NotFound("User Not Found");
+
+            string CityName = await _cityService.GetById(user.CityId);
+
+            UserProfileDTO userProfileDTO = new UserProfileDTO();
+            userProfileDTO.Id = user.Id;
+            userProfileDTO.FirstName = user.FirstName;
+            userProfileDTO.LastName = user.LastName;
+            userProfileDTO.UserName = user.UserName;
+            userProfileDTO.Email = user.Email;
+            userProfileDTO.PhoneNumber = user.PhoneNumber;
+            userProfileDTO.JoinDate = user.JoinDate;
+            userProfileDTO.CityName = CityName;
+
+            return Ok(userProfileDTO);
+
+        }
+
+        // This method uses .AsNoTracking(), which improves performance by disabling
+        // EF Core's change tracking:
+        //  - Lower memory usage per entity (no tracking overhead).
+        //  - Faster query execution since EF skips building the tracking graph.
+        //  - Better suited for read-only scenarios where entities won't be updated.
+        //
+        // However, this method still has no pagination.
+        // That means if the database contains millions of records:
+        //  - The database still has to return all rows.
+        //  - Network transfer is still very expensive (all rows must be sent).
+        //  - EF still loads all results into memory at once (high memory usage).
+        //  - Query time will still be very long.
+        //
+        // In short: .AsNoTracking() makes reads lighter but does NOT solve the
+        // "too much data at once" problem. Pagination is still needed for scalability.
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("get-all-users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            //No need to track all those entities in memory we project them into a DTO anyways
+            var users = await _userManager.Users.AsNoTracking()
+            .Include(u => u.City)
+            .Select(u => new UserProfileDTO
+            {
+                Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                UserName = u.UserName,
+                Email = u.Email,
+                PhoneNumber = u.PhoneNumber,
+                JoinDate = u.JoinDate,
+                CityName = u.City.Name
+            })
+            .ToListAsync();
+            //Select takes each element of a collection (or query) and transforms it into a
+            //new shape — like mapping one object into another
+
+            if (users == null) return NotFound("No users found");
+
+            return Ok(users);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("get-users-paginated")]
+        public async Task<IActionResult> GetUsersPaginated(int pageNumber = 1)
+        {
+            var users = await _userManager.Users
+            .AsNoTracking()
+            .Include(u => u.City)
+            .Skip((pageNumber - 1) * 10)
+            .Take(10)
+            .Select(u => new UserProfileDTO
+            {
+                Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                UserName = u.UserName,
+                Email = u.Email,
+                PhoneNumber = u.PhoneNumber,
+                JoinDate = u.JoinDate,
+                CityName = u.City.Name
+            })
+            .ToListAsync();
+
+            if (users == null) return NotFound("No users found");
+
+            //page number is the first set of users, page size is the number of users returned per call
+            //so page number 1 would mean first 10 users, page number 2 would mean second 10 users
+            //we use .Skip to fetch the page we need and .Take to only take the amount of rows we need
+
+            return Ok(users);
+        }
+
+        [HttpDelete("delete-account")]
+        [Authorize]
+        public async Task<IActionResult> DeleteUser()
+        {
+            string userName = User.FindFirstValue(ClaimTypes.Name);
+            ApplicationUser? user = await _userManager.FindByNameAsync(userName);
+
+            if (user == null) { return NotFound("User doesn't exist"); }
+
+            var result = await _userManager.DeleteAsync(user);
+
+            if (!result.Succeeded) return BadRequest(result.Errors);
+
+            return Ok($"User {user.UserName} has been deleted");
+        }
+
+
+        [HttpDelete("delete-user/{userName}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteUser(string userName)
+        {
+
+            ApplicationUser? user = await _userManager.FindByNameAsync(userName);
+
+            if (user == null) { return NotFound("User doesn't exist"); }
+
+            var result = await _userManager.DeleteAsync(user);
+
+            if (!result.Succeeded) return BadRequest(result.Errors);
+
+            return Ok($"User {user.UserName} has been deleted");
+        }
+
+
+        [HttpPut("update-profile")]
+        [Authorize]
+        public async Task<IActionResult> UpdateProfile(UserProfileDTO NewProfile)
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             var validationContext = new ValidationContext(NewProfile,
                 serviceProvider: HttpContext.RequestServices,
-                items: new Dictionary<object, object?> { { "UserId", Id } });
+                items: new Dictionary<object, object?> { { "UserId", currentUserId } });
 
             var results = new List<ValidationResult>();
             bool isValid = Validator.TryValidateObject(NewProfile, validationContext, results, true);
@@ -83,15 +218,46 @@ namespace E_CommerceApp.Controllers
                 return BadRequest(results);
             }
 
-            string? loggedInUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ApplicationUser? user = await _userManager.FindByIdAsync(currentUserId);
+            if (user == null) return NotFound("User Not Found");
 
-            if (loggedInUserId != Id && !User.IsInRole("Admin"))
+            string CityId = await _cityService.GetIdUsingName(NewProfile.CityName);
+
+            user.FirstName = NewProfile.FirstName;
+            user.LastName = NewProfile.LastName;
+            user.UserName = NewProfile.UserName;
+            user.Email = NewProfile.Email;
+            user.PhoneNumber = NewProfile.PhoneNumber;
+            user.CityId = CityId;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
             {
-                return Forbid();
+                return BadRequest(result.Errors);
             }
 
-            ApplicationUser? user = await _userManager.FindByIdAsync(Id);
-            if (user == null) return NotFound("User Not Found");
+            return Ok("User Profile Updated");
+        }
+
+        [HttpPut("update-user-profile/{userName}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateProfile(UserProfileDTO NewProfile, string userName)
+        {
+            ApplicationUser? user = await _userManager.FindByNameAsync(userName);
+            if (user == null) return NotFound("User not found");
+
+            string userId = user.Id;
+            var validationContext = new ValidationContext(NewProfile,
+                serviceProvider: HttpContext.RequestServices,
+                items: new Dictionary<object, object?> { { "UserId", userId } });
+
+            var results = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(NewProfile, validationContext, results, true);
+
+            if (!isValid)
+            {
+                return BadRequest(results);
+            }
 
             string CityId = await _cityService.GetIdUsingName(NewProfile.CityName);
 
@@ -117,11 +283,8 @@ namespace E_CommerceApp.Controllers
             if (ModelState.IsValid) {
 
                 var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (currentUserId != changePasswordDTO.UserId) {
-                    return Forbid("Now allowed to change this password");
-                }
 
-                ApplicationUser? user = await _userManager.FindByIdAsync(changePasswordDTO.UserId);
+                ApplicationUser? user = await _userManager.FindByIdAsync(currentUserId);
                 if (user == null) {
                     return NotFound("User doesn't exist");
                 }
@@ -214,44 +377,6 @@ namespace E_CommerceApp.Controllers
 
             return Ok(addressesDTO);
 
-        }
-
-        [Authorize(Roles = "Admin")]
-        [HttpGet("get-all-users")]
-        public async Task<IActionResult> GetAllUsers() {
-
-            var users = await _userManager.Users
-            .Include(u => u.City)
-            .Select(u => new GetUsersDTO
-            {
-                Id = u.Id,
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                UserName = u.UserName,
-                Email = u.Email,
-                PhoneNumber = u.PhoneNumber,
-                CityName = u.City.Name
-            })
-            .ToListAsync();
-            //Select takes each element of a collection (or query) and transforms it into a
-            //new shape — like mapping one object into another
-
-            return Ok(users);
-        }
-
-        [HttpDelete("delete-user/{Id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteUser(string Id) { 
-
-            ApplicationUser? user = await _userManager.FindByIdAsync(Id);
-
-            if (user == null) { return NotFound("User doesn't exist");  }
-
-            var result = await _userManager.DeleteAsync(user);
-
-            if (!result.Succeeded) return BadRequest(result.Errors);
-
-            return Ok($"User {user.UserName} has been deleted");
         }
 
         [HttpPut("deassign-role")]

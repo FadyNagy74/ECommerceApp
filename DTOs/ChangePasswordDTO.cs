@@ -5,8 +5,6 @@ namespace E_CommerceApp.DTOs
     public class ChangePasswordDTO
     {
         [Required]
-        public string UserId { get; set; }
-        [Required]
         public string OldPassword { get; set; }
         [Required]
         public string NewPassword { get; set; }

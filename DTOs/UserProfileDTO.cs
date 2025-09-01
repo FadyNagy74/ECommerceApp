@@ -5,6 +5,7 @@ namespace E_CommerceApp.DTOs
 {
     public class UserProfileDTO
     {
+        public string? Id { get; set; }
         [Required]
         [MaxLength(50)]
         [MinLength(3)]
@@ -28,6 +29,7 @@ namespace E_CommerceApp.DTOs
         public string PhoneNumber { get; set; }
         [Required]
         public string CityName { get; set; }
+        public DateTime? JoinDate { get; set; }
 
     }
 }
