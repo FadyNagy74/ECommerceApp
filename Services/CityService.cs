@@ -18,7 +18,7 @@ namespace E_CommerceApp.Services
         }
 
         public async Task<string> GetById(string Id) { 
-            City? city = await _cityRepository.GetById(Id);
+            City? city = await _cityRepository.GetByIdAsync(Id);
             if (city == null) return "City Not Found";
             return city.Name;
         }

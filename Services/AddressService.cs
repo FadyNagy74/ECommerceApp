@@ -24,13 +24,13 @@ namespace E_CommerceApp.Services
         }
 
         public async Task<UserAddress?> GetById(string Id) {
-            UserAddress? address = await _addressRepository.GetById(Id);
+            UserAddress? address = await _addressRepository.GetByIdAsync(Id);
             if (address == null) return null;
             return address;
         }
 
         public async Task<List<UserAddress>?> GetAll() {
-            List<UserAddress> addresses = await _addressRepository.GetAll();
+            List<UserAddress> addresses = await _addressRepository.GetAllAsync();
             if (addresses == null) return null;
             return addresses;
         }
