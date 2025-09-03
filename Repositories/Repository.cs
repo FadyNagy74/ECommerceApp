@@ -31,12 +31,12 @@ namespace E_CommerceApp.Repositories
             _dbSet.Add(entity);
         }
 
-        public async Task<T?> GetById(string Id) {
+        public async Task<T?> GetByIdAsync(string Id) {
             return await _dbSet.AsNoTracking().FirstOrDefaultAsync(e => EF.Property<string>(e,"Id")==Id);
             //FindAsync returns null if nothing is found
         }
 
-        public async Task<List<T>> GetAll() {
+        public async Task<List<T>> GetAllAsync() {
             return await _dbSet.AsNoTracking().ToListAsync<T>();
         }
 

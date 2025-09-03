@@ -4,6 +4,7 @@ using E_CommerceApp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace E_CommerceApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250903153046_Product")]
+    partial class Product
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -114,21 +117,6 @@ namespace E_CommerceApp.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("E_CommerceApp.Models.Category", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Categories");
-                });
-
             modelBuilder.Entity("E_CommerceApp.Models.City", b =>
                 {
                     b.Property<string>("Id")
@@ -153,11 +141,6 @@ namespace E_CommerceApp.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(9,2)");
 
@@ -167,95 +150,6 @@ namespace E_CommerceApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Products");
-                });
-
-            modelBuilder.Entity("E_CommerceApp.Models.ProductCategory", b =>
-                {
-                    b.Property<string>("ProductId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("CategoryId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("ProductId", "CategoryId");
-
-                    b.HasIndex("CategoryId");
-
-                    b.ToTable("ProductCategories");
-                });
-
-            modelBuilder.Entity("E_CommerceApp.Models.ProductTag", b =>
-                {
-                    b.Property<string>("ProductId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("TagId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("ProductId", "TagId");
-
-                    b.HasIndex("TagId");
-
-                    b.ToTable("ProductTags");
-                });
-
-            modelBuilder.Entity("E_CommerceApp.Models.Review", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<bool>("IsEdited")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<DateTime?>("LastModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ProductId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("RateValue")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Reviews", t =>
-                        {
-                            t.HasCheckConstraint("CK_Review_RateValue", "[RateValue] BETWEEN 1 AND 5");
-                        });
-                });
-
-            modelBuilder.Entity("E_CommerceApp.Models.Tag", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("E_CommerceApp.Models.UserAddress", b =>
@@ -426,63 +320,6 @@ namespace E_CommerceApp.Migrations
                     b.Navigation("City");
                 });
 
-            modelBuilder.Entity("E_CommerceApp.Models.ProductCategory", b =>
-                {
-                    b.HasOne("E_CommerceApp.Models.Category", "Category")
-                        .WithMany("ProductCategories")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("E_CommerceApp.Models.Product", "Product")
-                        .WithMany("ProductCategories")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("E_CommerceApp.Models.ProductTag", b =>
-                {
-                    b.HasOne("E_CommerceApp.Models.Product", "Product")
-                        .WithMany("ProductTags")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("E_CommerceApp.Models.Tag", "Tag")
-                        .WithMany("ProductTags")
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("Tag");
-                });
-
-            modelBuilder.Entity("E_CommerceApp.Models.Review", b =>
-                {
-                    b.HasOne("E_CommerceApp.Models.Product", "Product")
-                        .WithMany("Reviews")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("E_CommerceApp.Models.ApplicationUser", "User")
-                        .WithMany("Reviews")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("E_CommerceApp.Models.UserAddress", b =>
                 {
                     b.HasOne("E_CommerceApp.Models.ApplicationUser", "User")
@@ -547,33 +384,12 @@ namespace E_CommerceApp.Migrations
 
             modelBuilder.Entity("E_CommerceApp.Models.ApplicationUser", b =>
                 {
-                    b.Navigation("Reviews");
-
                     b.Navigation("UserAddresses");
-                });
-
-            modelBuilder.Entity("E_CommerceApp.Models.Category", b =>
-                {
-                    b.Navigation("ProductCategories");
                 });
 
             modelBuilder.Entity("E_CommerceApp.Models.City", b =>
                 {
                     b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("E_CommerceApp.Models.Product", b =>
-                {
-                    b.Navigation("ProductCategories");
-
-                    b.Navigation("ProductTags");
-
-                    b.Navigation("Reviews");
-                });
-
-            modelBuilder.Entity("E_CommerceApp.Models.Tag", b =>
-                {
-                    b.Navigation("ProductTags");
                 });
 #pragma warning restore 612, 618
         }

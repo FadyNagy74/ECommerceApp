@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace E_CommerceApp.Models
 {
@@ -8,6 +9,11 @@ namespace E_CommerceApp.Models
     {
         public DbSet<City> Cities { get; set; }
         public DbSet<UserAddress> UserAddresses { get; set; }
+
+        public DbSet<Product> Products { get; set; }
+        public DbSet<Tag> Tags { get; set; }
+        public DbSet<ProductTag> ProductTags { get; set; }
+        public DbSet<Review> Reviews { get; set; }    
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { 
             
         }
@@ -55,6 +61,7 @@ namespace E_CommerceApp.Models
                 .HasForeignKey(user => user.CityId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+
             builder.Entity<UserAddress>()
                 .HasOne(userAddress => userAddress.User)
                 .WithMany(user => user.UserAddresses)
@@ -67,6 +74,74 @@ namespace E_CommerceApp.Models
                 entity.HasIndex(userAddress => userAddress.Address).IsUnique();
             }
             );
+
+            builder.Entity<Product>(entity =>
+            {
+                entity.Property(product => product.Description).IsRequired().HasMaxLength(2000);
+                entity.Property(product => product.Price).IsRequired().HasColumnType("decimal(9,2)");
+                entity.Property(product => product.Stock).IsRequired();
+                entity.Property(product => product.Name).IsRequired().HasMaxLength(100);
+
+            });
+
+            builder.Entity<Tag>().Property(tag => tag.Name).IsRequired().HasMaxLength(50);
+
+            builder.Entity<ProductTag>()
+                .HasKey(pt => new { pt.ProductId, pt.TagId }); // composite key
+
+            builder.Entity<ProductTag>()
+                .HasOne(pt => pt.Product)
+                .WithMany(p => p.ProductTags)
+                .HasForeignKey(pt => pt.ProductId); //One-To-Many from product to producttags
+                                                    //Product has many rows in producttags but each producttag belongs to one product
+
+            builder.Entity<ProductTag>()
+                .HasOne(pt => pt.Tag)
+                .WithMany(t => t.ProductTags)
+                .HasForeignKey(pt => pt.TagId); //One-To-Many from tag to producttags
+                                                //Tag has many rows in producttags but each producttag belongs to one tag
+
+            builder.Entity<Review>(entity =>
+            {
+                entity.Property(review => review.Description).IsRequired().HasMaxLength(2000);
+                entity.Property(review => review.IsEdited).IsRequired().HasDefaultValue(false);
+                entity.Property(review => review.RateValue).IsRequired();
+                entity.ToTable(t => t.HasCheckConstraint(
+                    "CK_Review_RateValue",
+                    "[RateValue] BETWEEN 1 AND 5"
+                 ));
+                
+            });
+
+            builder.Entity<Review>()
+                .HasOne(review => review.User)
+                .WithMany(user => user.Reviews)
+                .HasForeignKey(review => review.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Review>()
+                .HasOne(review => review.Product)
+                .WithMany(product => product.Reviews)
+                .HasForeignKey(review => review.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Category>().Property(category => category.Name).IsRequired().HasMaxLength(50);
+
+            builder.Entity<ProductCategory>()
+                .HasKey(pc => new { pc.ProductId, pc.CategoryId }); // composite key
+
+            builder.Entity<ProductCategory>()
+                .HasOne(pc => pc.Product)
+                .WithMany(p => p.ProductCategories)
+                .HasForeignKey(pc => pc.ProductId); //One-To-Many from product to productcategory
+                                                    //Product has many rows in productcategories but each productcategory belongs to one product
+
+            builder.Entity<ProductCategory>()
+                .HasOne(pc => pc.Category)
+                .WithMany(c => c.ProductCategories)
+                .HasForeignKey(pc => pc.CategoryId); //One-To-Many from category to productcategory
+                                                     //Category has many rows in productcategories but each productcategory belongs to one category
+
         }
     }
 }

@@ -10,7 +10,8 @@ namespace E_CommerceApp.Models
 
         public string CityId { get; set; }
         public City City { get; set; }
-        public ICollection<UserAddress> UserAddresses { get; set; }
+        public ICollection<UserAddress> UserAddresses { get; set; } = new List<UserAddress>();
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
 
 
         public ApplicationUser() {

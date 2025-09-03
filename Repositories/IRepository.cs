@@ -4,9 +4,9 @@
     {
         public void Add(T entity);
         //Adding method _context.Add() just adds the entity to memory until we save changes so no need for async
-        public Task<T?> GetById(string Id);
+        public Task<T?> GetByIdAsync(string Id);
         //Querying the database is done immediately so we don't want the thread to do nothing during this time
-        public Task<List<T>> GetAll();
+        public Task<List<T>> GetAllAsync();
         //Querying the database is done immediately so we don't want the thread to do nothing during this time
 
         public void Update(T entity);
