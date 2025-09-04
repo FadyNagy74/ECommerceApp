@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace E_CommerceApp.Models
 {
@@ -6,6 +7,7 @@ namespace E_CommerceApp.Models
     public class Tag
     {
         public string Id { get; set; }
+        [MinLength(2)]
         public string Name { get; set; }
         public ICollection<ProductTag> ProductTags { get; set; } = new List<ProductTag>();
         public Tag() { 

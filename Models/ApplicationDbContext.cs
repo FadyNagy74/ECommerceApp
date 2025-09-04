@@ -78,8 +78,8 @@ namespace E_CommerceApp.Models
             builder.Entity<Product>(entity =>
             {
                 entity.Property(product => product.Description).IsRequired().HasMaxLength(2000);
-                entity.Property(product => product.Price).IsRequired().HasColumnType("decimal(9,2)");
-                entity.Property(product => product.Stock).IsRequired();
+                entity.Property(product => product.Price).IsRequired().HasColumnType("decimal(9,2)").HasDefaultValue(0.00);
+                entity.Property(product => product.Stock).IsRequired().HasDefaultValue(0);
                 entity.Property(product => product.Name).IsRequired().HasMaxLength(100);
 
             });

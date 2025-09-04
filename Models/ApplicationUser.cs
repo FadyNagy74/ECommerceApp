@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace E_CommerceApp.Models
 {
     public class ApplicationUser : IdentityUser
     {
+        [MinLength(3)]
         public string FirstName { get; set; }
+        [MinLength(3)]
         public string LastName { get; set; }
         public DateTime JoinDate { get; set; }
 

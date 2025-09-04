@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace E_CommerceApp.Models
 {
@@ -6,6 +7,7 @@ namespace E_CommerceApp.Models
     public class Review
     {
         public string Id { get; set; }
+        [MinLength(5)]
         public string Description { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? LastModifiedAt { get; set; }

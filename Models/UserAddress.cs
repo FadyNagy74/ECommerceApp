@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace E_CommerceApp.Models
 {
@@ -6,6 +7,7 @@ namespace E_CommerceApp.Models
     public class UserAddress
     {
         public string Id { get; set; }
+        [MinLength(5)]
         public string Address { get; set; }
         public string UserId { get; set; }
         public ApplicationUser User { get; set; }

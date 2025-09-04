@@ -25,8 +25,12 @@ namespace E_CommerceApp
             //Custom Injections
             builder.Services.AddScoped<ICityRepository, CityRepository>();
             builder.Services.AddScoped<CityService>();
+
             builder.Services.AddScoped<IAddressRepository, AddressRepository>();
             builder.Services.AddScoped<AddressService>();
+
+            builder.Services.AddScoped<IProductRepository, ProductRepository>();
+            builder.Services.AddScoped<ProductService>();
 
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
