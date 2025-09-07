@@ -4,5 +4,6 @@ namespace E_CommerceApp.Repositories
 {
     public interface IProductRepository : IRepository<Product>
     {
+        
     }
 }

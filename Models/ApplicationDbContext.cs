@@ -13,6 +13,9 @@ namespace E_CommerceApp.Models
         public DbSet<Product> Products { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<ProductTag> ProductTags { get; set; }
+
+        public DbSet<Category> Catrgories { get; set; }
+        public DbSet<ProductCategory> ProductCategories { get; set; }
         public DbSet<Review> Reviews { get; set; }    
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { 
             
@@ -85,6 +88,7 @@ namespace E_CommerceApp.Models
             });
 
             builder.Entity<Tag>().Property(tag => tag.Name).IsRequired().HasMaxLength(50);
+            builder.Entity<Tag>().HasIndex(tag => tag.Name).IsUnique();
 
             builder.Entity<ProductTag>()
                 .HasKey(pt => new { pt.ProductId, pt.TagId }); // composite key
@@ -126,6 +130,7 @@ namespace E_CommerceApp.Models
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<Category>().Property(category => category.Name).IsRequired().HasMaxLength(50);
+            builder.Entity<Category>().HasIndex(category => category.Name).IsUnique();
 
             builder.Entity<ProductCategory>()
                 .HasKey(pc => new { pc.ProductId, pc.CategoryId }); // composite key

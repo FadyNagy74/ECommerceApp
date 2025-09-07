@@ -32,6 +32,12 @@ namespace E_CommerceApp
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<ProductService>();
 
+            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+            builder.Services.AddScoped<CategoryService>();
+
+            builder.Services.AddScoped<ITagRepositry, TagRepository>();
+            builder.Services.AddScoped<TagService>();
+
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

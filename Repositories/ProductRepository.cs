@@ -6,5 +6,7 @@ namespace E_CommerceApp.Repositories
     {
         public ProductRepository(ApplicationDbContext context) : base(context) { 
         } 
+
+        
     }
 }

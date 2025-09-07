@@ -14,5 +14,8 @@ namespace E_CommerceApp.DTOs
         public decimal Price { get; set; } //Decimal avoids rounding errors in float or double
         [Required]
         public int Stock { get; set; }
+        [Required]
+        public List<string> Categories { get; set; } = new();
+        public List<string> Tags { get; set; } = new();
     }
 }
