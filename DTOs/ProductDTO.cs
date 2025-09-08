@@ -16,6 +16,7 @@ namespace E_CommerceApp.DTOs
         public int Stock { get; set; }
         [Required]
         public List<string> Categories { get; set; } = new();
+        [Required]
         public List<string> Tags { get; set; } = new();
     }
 }

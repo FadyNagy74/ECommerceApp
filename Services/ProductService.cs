@@ -18,6 +18,9 @@ namespace E_CommerceApp.Services
 
         public async Task<int> AddProduct(ProductDTO productDTO) {
 
+            if (productDTO.Price < 0) throw new ArgumentOutOfRangeException("Price must be a positive number");
+            if (productDTO.Stock < 0) throw new ArgumentOutOfRangeException("Stock must be a positive number"); 
+
             Product product = new Product();
             product.Name = productDTO.Name;
             product.Description = productDTO.Description;

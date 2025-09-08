@@ -4,7 +4,9 @@ using E_CommerceApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration.UserSecrets;
 using System.Numerics;
+using System.Security.Claims;
 
 namespace E_CommerceApp.Controllers
 {
@@ -15,11 +17,13 @@ namespace E_CommerceApp.Controllers
         private readonly ProductService _productService;
         private readonly CategoryService _categoryService;
         private readonly TagService _tagService;
+        private readonly ReviewService _reviewService;
 
-        public ProductController(ProductService productService, CategoryService categoryService, TagService tagService) { 
+        public ProductController(ProductService productService, CategoryService categoryService, TagService tagService, ReviewService reviewService) { 
             _productService = productService;
             _categoryService = categoryService;
             _tagService = tagService;
+            _reviewService = reviewService;
         }
 
 
@@ -34,9 +38,14 @@ namespace E_CommerceApp.Controllers
                 int result = await _productService.AddProduct(productDTO);
                 if (result > 0) return Ok($"Product {productDTO.Name} Added");
                 else return BadRequest($"Product {productDTO.Name} was not added");
-            } catch (KeyNotFoundException ex)
+            }
+            catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
             catch (ArgumentException ex)
             {
@@ -105,35 +114,128 @@ namespace E_CommerceApp.Controllers
             return BadRequest($"Tag {tagName} was not removed");
         }
 
-        /*
+        [HttpPost("add-review/{productId}")]
+        [Authorize]
+        public async Task<IActionResult> AddReview(string productId, ReviewDTO reviewDTO) {
+            if (!ModelState.IsValid) {
+                return BadRequest(ModelState);
+            }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userName = User.FindFirstValue(ClaimTypes.Name);
+            try
+            {
+                int result = await _reviewService.AddReview(userId, productId, reviewDTO);
+                if (result >= 1) {
+                    return Ok(new { message = $"User {userName} added a review" });
+                }
+                return BadRequest("Review was not added");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex) {
+                return StatusCode(500, new { message = "An unexpected error occurred.", detail = ex.Message });
+            }
+
+        }
+
+        [HttpDelete("remove-review/{reviewId}")]
+        [Authorize]
+        public async Task<IActionResult> RemoveReview(string reviewId) {
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userName = User.FindFirstValue(ClaimTypes.Name);
+
+            try {
+                int result = await _reviewService.RemoveReview(userId, reviewId);
+                if (result >= 1)
+                {
+                    return Ok(new { message = $"User {userName} deleted a review" });
+                }
+                return BadRequest("Review was not deleted");
+            } catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }catch (UnauthorizedAccessException ex)
+            {
+                return Forbid();
+            }
+        }
+
+        [HttpPut("edit-review/{reviewId}")]
+        [Authorize]
+        public async Task<IActionResult> EditReview(string reviewId, ReviewDTO reviewDTO) {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userName = User.FindFirstValue(ClaimTypes.Name);
+
+            try
+            {
+                int result = await _reviewService.EditReview(userId, reviewId, reviewDTO);
+                if (result >= 1)
+                {
+                    return Ok(new { message = $"User {userName} edited a review" });
+                }
+                return BadRequest("Review was not edited");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid();
+            }
+        }
+
+        [HttpDelete("remove-user-review/{reviewId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RemoveUserReview(string reviewId)
+        {
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userName = User.FindFirstValue(ClaimTypes.Name);
+
+            try
+            {
+                int result = await _reviewService.RemoveUserReview(userId, reviewId);
+                if (result >= 1)
+                {
+                    return Ok(new { message = $"Admin {userName} deleted a review" });
+                }
+                return BadRequest("Review was not deleted");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            
+        }
+
+
         [HttpGet("view-product/{productId}")]
         [Authorize]
         public async Task<IActionResult> ViewProduct(string productId) {
             Product? product = await _productService.GetById(productId);
             if (product == null) return NotFound("Product not found");
 
-            ProductDTO productDTO = new ProductDTO();
+            ShowProductDTO productDTO = new ShowProductDTO();
             productDTO.Name = product.Name;
             productDTO.Description = product.Description;
             productDTO.Price = product.Price;
             productDTO.Stock = product.Stock;
 
-            List<string> productCategories = new List<string>();
-            List<string> productTags = new List<string>();
-
-            foreach (var productCategory in product.ProductCategories) {
-                productCategories.Add(productCategory.Category.Name);
-            }
-
-            foreach (var productTag in product.ProductTags) { 
-                productTags .Add(productTag.Tag.Name);
-            }
-
-            productDTO.Categories = productCategories;
-            productDTO.Tags = productTags;
             return Ok(productDTO);
         }
-        */
+        
 
     }
 }

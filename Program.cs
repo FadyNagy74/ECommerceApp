@@ -38,6 +38,9 @@ namespace E_CommerceApp
             builder.Services.AddScoped<ITagRepositry, TagRepository>();
             builder.Services.AddScoped<TagService>();
 
+            builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+            builder.Services.AddScoped<ReviewService>();
+
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
