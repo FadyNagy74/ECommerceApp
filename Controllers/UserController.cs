@@ -139,9 +139,15 @@ namespace E_CommerceApp.Controllers
         [HttpGet("get-users-paginated")]
         public async Task<IActionResult> GetUsersPaginated(int pageNumber = 1)
         {
+            //ALWAYS order when paging (paginating) [Specified in official Linq Docs]
+            //Execution plans may differ each request so if we don't specify an order a user might appear
+            //In first page (first request) because Sql Server chose the Id index and same user might also
+            //appear in second page because Sql Server chose the Email index
+
             var users = await _userManager.Users
             .AsNoTracking()
             .Include(u => u.City)
+            .OrderBy(u => u.JoinDate)
             .Skip((pageNumber - 1) * 10)
             .Take(10)
             .Select(u => new UserProfileDTO

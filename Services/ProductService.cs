@@ -10,10 +10,12 @@ namespace E_CommerceApp.Services
         private readonly IProductRepository _productRepository;
         private readonly ICategoryRepository _categoryRepository;
         private readonly ITagRepositry _tagRepositry;
-        public ProductService(IProductRepository productRepository, ICategoryRepository categoryRepository, ITagRepositry tagRepositry) { 
+        private readonly IReviewRepository _reviewRepository;
+        public ProductService(IProductRepository productRepository, ICategoryRepository categoryRepository, ITagRepositry tagRepositry, IReviewRepository reviewRepository) { 
             _productRepository = productRepository;
             _categoryRepository = categoryRepository;
             _tagRepositry = tagRepositry;
+            _reviewRepository = reviewRepository;
         }
 
         public async Task<int> AddProduct(ProductDTO productDTO) {
@@ -86,10 +88,78 @@ namespace E_CommerceApp.Services
             return result;
         }
 
-        public async Task<Product?> GetById(string productId) { 
+        public async Task<Product> GetById(string productId) { 
             Product? product = await _productRepository.GetByIdAsync(productId);
-            if (product == null) return null;
+            if (product == null) throw new KeyNotFoundException("Product with this Id was not found");
             return product;
+        }
+
+        
+        public async Task<List<ShowReviewDTO>?> GetProductReviews(string productId)
+        {
+            var reviews = await _reviewRepository.GetProductReviews(productId);
+            if (reviews == null) return null;
+            return reviews;
+        }
+
+        public async Task<List<Product>> GetProductsInCategory(string categoryName, int pageNumber) { 
+
+            var products = await _productRepository.GetProductsIncategory(categoryName, pageNumber);
+            if(!products.Any()) throw new KeyNotFoundException($"No products found in category '{categoryName} or category doesn't exist'");
+            return products;
+
+        }
+
+        public async Task<List<Product>> GetProducsInPriceRange(decimal start, decimal end, int pageNumber) {
+            var products = await _productRepository.GetProductsInPriceRange(start, end, pageNumber);
+            if (!products.Any()) throw new KeyNotFoundException($"No products were found in this price range");
+            return products;
+        }
+
+        public async Task<List<Product>> GetProductsSorted(bool asc, int pageNumber) {
+            List<Product> products = new List<Product>();
+            if (asc) {
+                products = await _productRepository.GetProductsSortedAsc(pageNumber);
+            }
+            else
+            {
+                products = await _productRepository.GetProductsSortedDsc(pageNumber);
+            }
+            if (!products.Any()) throw new KeyNotFoundException($"No products were found");
+            return products;
+        }
+
+        public async Task<List<ViewProductWithRateDTO>> GetProductsReviewSorted(bool asc, int pageNumber)
+        {
+            List<ViewProductWithRateDTO> products = new List<ViewProductWithRateDTO>();
+            if (asc)
+            {
+                products = await _productRepository.GetProductsSortedReviewAsc(pageNumber);
+            }
+            else
+            {
+                products = await _productRepository.GetProductsSortedReviewDsc(pageNumber);
+            }
+            if (!products.Any()) throw new KeyNotFoundException($"No products were found");
+            return products;
+        }
+
+        public async Task<List<Product>> GetAllProducts() {
+            var products = await _productRepository.GetAllAsync();
+            if(!products.Any()) throw new KeyNotFoundException("No products were found");
+            return products;
+        }
+
+        public async Task<List<string>> SearchProducts(string query) {
+            var products = await _productRepository.Search(query);
+            if (!products.Any()) throw new KeyNotFoundException("No products were found");
+
+            List<string> productNames = new List<string>();
+            foreach (var product in products)
+            {
+                productNames.Add(product.Name);
+            }
+            return productNames;
         }
 
 

@@ -20,7 +20,11 @@ namespace E_CommerceApp
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.DefaultIgnoreCondition =
+                    System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+            }); //Null properties will not be serialized (C# Code to JSON)
 
             //Custom Injections
             builder.Services.AddScoped<ICityRepository, CityRepository>();
@@ -40,6 +44,7 @@ namespace E_CommerceApp
 
             builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
             builder.Services.AddScoped<ReviewService>();
+
 
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>

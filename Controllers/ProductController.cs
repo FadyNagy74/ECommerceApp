@@ -224,18 +224,158 @@ namespace E_CommerceApp.Controllers
         [HttpGet("view-product/{productId}")]
         [Authorize]
         public async Task<IActionResult> ViewProduct(string productId) {
-            Product? product = await _productService.GetById(productId);
-            if (product == null) return NotFound("Product not found");
+            try
+            {
+                Product product = await _productService.GetById(productId);
 
-            ShowProductDTO productDTO = new ShowProductDTO();
-            productDTO.Name = product.Name;
-            productDTO.Description = product.Description;
-            productDTO.Price = product.Price;
-            productDTO.Stock = product.Stock;
+                List<ShowReviewDTO>? productReviews = await _productService.GetProductReviews(productId);
 
-            return Ok(productDTO);
+                ViewProductWithReviewsDTO productDTO = new ViewProductWithReviewsDTO();
+                productDTO.Name = product.Name;
+                productDTO.Description = product.Description;
+                productDTO.Price = product.Price;
+                productDTO.Stock = product.Stock;
+                productDTO.ShowReviews = productReviews;
+                return Ok(productDTO);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex) {
+                return StatusCode(500, new { message = "An unexpected error occured", detail = ex.Message });
+            }
         }
-        
+
+        [HttpGet("filter")]
+        [Authorize]
+        public async Task<IActionResult> FilterProductsUsingCategory(string categoryName, int pageNumber = 1) {
+            try
+            {
+                var products = await _productService.GetProductsInCategory(categoryName, pageNumber);
+                List<ViewProductWithReviewsDTO> productsDTO  = new List<ViewProductWithReviewsDTO>();
+                foreach (var product in products)
+                {
+                    ViewProductWithReviewsDTO showProductDTO = new ViewProductWithReviewsDTO();
+                    showProductDTO.Name = product.Name;
+                    showProductDTO.Description = product.Description;
+                    showProductDTO.Price = product.Price;
+                    showProductDTO.Stock = product.Stock;
+                    productsDTO.Add(showProductDTO);
+                }
+                return Ok(productsDTO);
+            }
+            catch (KeyNotFoundException ex) {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex) {
+                return StatusCode(500, new { message = "An unexpected error occured", detail = ex.Message });
+            }
+        }
+
+        [HttpGet("price")]
+        [Authorize]
+        public async Task<IActionResult> FilterProductsUsingPriceRange(decimal minPrice, decimal maxPrice, int pageNumber = 1) {
+            try
+            {
+                var products = await _productService.GetProducsInPriceRange(minPrice, maxPrice, pageNumber);
+                List<ViewProductWithReviewsDTO> productsDTO = new List<ViewProductWithReviewsDTO>();
+                foreach (var product in products)
+                {
+                    ViewProductWithReviewsDTO showProductDTO = new ViewProductWithReviewsDTO();
+                    showProductDTO.Name = product.Name;
+                    showProductDTO.Description = product.Description;
+                    showProductDTO.Price = product.Price;
+                    showProductDTO.Stock = product.Stock;
+                    productsDTO.Add(showProductDTO);
+                }
+                return Ok(productsDTO);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occured", detail = ex.Message });
+            }
+
+        }
+
+        [HttpGet("price-sort")]
+        [Authorize]
+        public async Task<IActionResult> FilterProductsUsingPriceSort(bool asc = true,int pageNumber = 1) {
+            try
+            {
+                var products = await _productService.GetProductsSorted(asc, pageNumber);
+                List<ViewProductWithReviewsDTO> productsDTO = new List<ViewProductWithReviewsDTO>();
+                foreach (var product in products)
+                {
+                    ViewProductWithReviewsDTO showProductDTO = new ViewProductWithReviewsDTO();
+                    showProductDTO.Name = product.Name;
+                    showProductDTO.Description = product.Description;
+                    showProductDTO.Price = product.Price;
+                    showProductDTO.Stock = product.Stock;
+                    productsDTO.Add(showProductDTO);
+                }
+                return Ok(productsDTO);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occured", detail = ex.Message });
+            }
+        }
+
+        [HttpGet("review-sort")]
+        [Authorize]
+        public async Task<IActionResult> FilterProductsUsingReviews(bool asc = true, int pageNumber = 1) {
+            try
+            {
+                var productsDTO = await _productService.GetProductsReviewSorted(asc, pageNumber);
+                
+                return Ok(productsDTO);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occured", detail = ex.Message });
+            }
+        }
+
+        /*
+        [HttpGet("filter")]
+        [Authorize]
+        //1 = price, 2 = review
+        public async Task<IActionResult> FilterProducts(string? categoryName, decimal? minPrice, decimal? maxPrice, int? sortBy, bool? asc = true, int pageNumber = 1) {
+            
+
+        }
+        */
+
+        [HttpGet("search")]
+        //[Authorize]
+        public async Task<IActionResult> Search(string searchQuery) {
+            try {
+                var products = await _productService.SearchProducts(searchQuery);
+                return Ok(products);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occured", detail = ex.Message });
+            }
+        }
+
 
     }
 }
