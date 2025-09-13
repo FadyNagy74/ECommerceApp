@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration.UserSecrets;
+using Microsoft.IdentityModel.Tokens;
+using System.Linq;
 using System.Numerics;
 using System.Security.Claims;
 
@@ -27,7 +29,7 @@ namespace E_CommerceApp.Controllers
         }
 
 
-        [HttpPost("add-product")]
+        [HttpPost("Add")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddProduct(ProductDTO productDTO) {
             if (!ModelState.IsValid) {
@@ -59,7 +61,7 @@ namespace E_CommerceApp.Controllers
 
         }
 
-        [HttpDelete("remove-product/{productId}")]
+        [HttpDelete("Remove/{productId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RemoveProduct(string productId) {
 
@@ -72,7 +74,7 @@ namespace E_CommerceApp.Controllers
         }
 
         
-        [HttpPost("add-category/{categoryName}")]
+        [HttpPost("Add-Category/{categoryName}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddCategory(string categoryName) {
             int result = await _categoryService.Add(categoryName);
@@ -81,7 +83,7 @@ namespace E_CommerceApp.Controllers
             return BadRequest($"Category {categoryName} was not added");
         }
 
-        [HttpDelete("remove-category/{categoryName}")]
+        [HttpDelete("Remove-Category/{categoryName}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RemoveCategory(string categoryName){
             Category? category = await _categoryService.FindByName(categoryName);
@@ -92,7 +94,7 @@ namespace E_CommerceApp.Controllers
             return BadRequest($"Category {categoryName} was not removed");
         }
 
-        [HttpPost("add-tag/{tagName}")]
+        [HttpPost("Add-Tag/{tagName}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddTag(string tagName)
         {
@@ -102,7 +104,7 @@ namespace E_CommerceApp.Controllers
             return BadRequest($"Tag {tagName} was not added");
         }
 
-        [HttpDelete("remove-tag/{tagName}")]
+        [HttpDelete("Remove-Tag/{tagName}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RemoveTag(string tagName)
         {
@@ -114,7 +116,7 @@ namespace E_CommerceApp.Controllers
             return BadRequest($"Tag {tagName} was not removed");
         }
 
-        [HttpPost("add-review/{productId}")]
+        [HttpPost("Add-Review/{productId}")]
         [Authorize]
         public async Task<IActionResult> AddReview(string productId, ReviewDTO reviewDTO) {
             if (!ModelState.IsValid) {
@@ -144,7 +146,7 @@ namespace E_CommerceApp.Controllers
 
         }
 
-        [HttpDelete("remove-review/{reviewId}")]
+        [HttpDelete("Remove-Review/{reviewId}")]
         [Authorize]
         public async Task<IActionResult> RemoveReview(string reviewId) {
 
@@ -167,7 +169,7 @@ namespace E_CommerceApp.Controllers
             }
         }
 
-        [HttpPut("edit-review/{reviewId}")]
+        [HttpPut("Edit-Review/{reviewId}")]
         [Authorize]
         public async Task<IActionResult> EditReview(string reviewId, ReviewDTO reviewDTO) {
             if (!ModelState.IsValid)
@@ -196,7 +198,7 @@ namespace E_CommerceApp.Controllers
             }
         }
 
-        [HttpDelete("remove-user-review/{reviewId}")]
+        [HttpDelete("Remove-User-Review/{reviewId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RemoveUserReview(string reviewId)
         {
@@ -221,20 +223,22 @@ namespace E_CommerceApp.Controllers
         }
 
 
-        [HttpGet("view-product/{productId}")]
-        [Authorize]
+        [HttpGet("View/{productId}")]
+        //[Authorize]
         public async Task<IActionResult> ViewProduct(string productId) {
             try
             {
                 Product product = await _productService.GetById(productId);
 
                 List<ShowReviewDTO>? productReviews = await _productService.GetProductReviews(productId);
+                double productRateValue = productReviews.Average(p => p.RateValue);
 
                 ViewProductWithReviewsDTO productDTO = new ViewProductWithReviewsDTO();
                 productDTO.Name = product.Name;
                 productDTO.Description = product.Description;
                 productDTO.Price = product.Price;
                 productDTO.Stock = product.Stock;
+                productDTO.RateValue = productRateValue;
                 productDTO.ShowReviews = productReviews;
                 return Ok(productDTO);
             }
@@ -247,123 +251,68 @@ namespace E_CommerceApp.Controllers
             }
         }
 
-        [HttpGet("filter")]
+        
+
+
+        [HttpGet("Filter")]
         [Authorize]
-        public async Task<IActionResult> FilterProductsUsingCategory(string categoryName, int pageNumber = 1) {
+        //sort: 1 price sort, 2 review sort
+        public async Task<IActionResult> FilterProducts(string? categoryName, decimal? minPrice, decimal? maxPrice, int? sort, bool? asc, int pageNumber = 1)
+        {
             try
             {
-                var products = await _productService.GetProductsInCategory(categoryName, pageNumber);
-                List<ViewProductWithReviewsDTO> productsDTO  = new List<ViewProductWithReviewsDTO>();
-                foreach (var product in products)
+                List<Product> filteredProducts;
+
+                if (!string.IsNullOrEmpty(categoryName))
                 {
-                    ViewProductWithReviewsDTO showProductDTO = new ViewProductWithReviewsDTO();
-                    showProductDTO.Name = product.Name;
-                    showProductDTO.Description = product.Description;
-                    showProductDTO.Price = product.Price;
-                    showProductDTO.Stock = product.Stock;
-                    productsDTO.Add(showProductDTO);
+                    if (minPrice.HasValue && maxPrice.HasValue)
+                    {
+                        filteredProducts = await _productService.GetProductsInCategoryAndPriceRange(
+                            categoryName, minPrice.Value, maxPrice.Value, pageNumber);
+                    }
+                    else
+                    {
+                        filteredProducts = await _productService.GetProductsInCategory(
+                            categoryName, pageNumber);
+                    }
                 }
-                return Ok(productsDTO);
-            }
-            catch (KeyNotFoundException ex) {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (Exception ex) {
-                return StatusCode(500, new { message = "An unexpected error occured", detail = ex.Message });
-            }
-        }
-
-        [HttpGet("price")]
-        [Authorize]
-        public async Task<IActionResult> FilterProductsUsingPriceRange(decimal minPrice, decimal maxPrice, int pageNumber = 1) {
-            try
-            {
-                var products = await _productService.GetProducsInPriceRange(minPrice, maxPrice, pageNumber);
-                List<ViewProductWithReviewsDTO> productsDTO = new List<ViewProductWithReviewsDTO>();
-                foreach (var product in products)
+                else if (minPrice.HasValue && maxPrice.HasValue)
                 {
-                    ViewProductWithReviewsDTO showProductDTO = new ViewProductWithReviewsDTO();
-                    showProductDTO.Name = product.Name;
-                    showProductDTO.Description = product.Description;
-                    showProductDTO.Price = product.Price;
-                    showProductDTO.Stock = product.Stock;
-                    productsDTO.Add(showProductDTO);
+                    filteredProducts = await _productService.GetProducsInPriceRange(
+                        minPrice.Value, maxPrice.Value, pageNumber);
                 }
-                return Ok(productsDTO);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An unexpected error occured", detail = ex.Message });
-            }
-
-        }
-
-        [HttpGet("price-sort")]
-        [Authorize]
-        public async Task<IActionResult> FilterProductsUsingPriceSort(bool asc = true,int pageNumber = 1) {
-            try
-            {
-                var products = await _productService.GetProductsSorted(asc, pageNumber);
-                List<ViewProductWithReviewsDTO> productsDTO = new List<ViewProductWithReviewsDTO>();
-                foreach (var product in products)
+                else
                 {
-                    ViewProductWithReviewsDTO showProductDTO = new ViewProductWithReviewsDTO();
-                    showProductDTO.Name = product.Name;
-                    showProductDTO.Description = product.Description;
-                    showProductDTO.Price = product.Price;
-                    showProductDTO.Stock = product.Stock;
-                    productsDTO.Add(showProductDTO);
+                    return BadRequest("Must choose a filter (category or price range).");
                 }
-                return Ok(productsDTO);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An unexpected error occured", detail = ex.Message });
-            }
-        }
 
-        [HttpGet("review-sort")]
-        [Authorize]
-        public async Task<IActionResult> FilterProductsUsingReviews(bool asc = true, int pageNumber = 1) {
-            try
-            {
-                var productsDTO = await _productService.GetProductsReviewSorted(asc, pageNumber);
-                
-                return Ok(productsDTO);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An unexpected error occured", detail = ex.Message });
-            }
-        }
+                if (sort.HasValue)
+                {
+                    if (sort.Value < 1 || sort.Value > 2) return BadRequest("Sorting type not valid");
+                    if (!asc.HasValue) return BadRequest("Must choose sorting order");
+                    if (sort.Value == 1)
+                    {
+                        filteredProducts = _productService.SortProductsPrice(filteredProducts, asc.Value);
+                    }
+                    if (sort.Value == 2)
+                    {
+                        filteredProducts = _productService.SortProductsReviews(filteredProducts, asc.Value);
+                    }
+                }
 
-        /*
-        [HttpGet("filter")]
-        [Authorize]
-        //1 = price, 2 = review
-        public async Task<IActionResult> FilterProducts(string? categoryName, decimal? minPrice, decimal? maxPrice, int? sortBy, bool? asc = true, int pageNumber = 1) {
-            
+                if (filteredProducts.Count == 0) return NotFound("No products found");
 
-        }
-        */
 
-        [HttpGet("search")]
-        //[Authorize]
-        public async Task<IActionResult> Search(string searchQuery) {
-            try {
-                var products = await _productService.SearchProducts(searchQuery);
+
+                var products = filteredProducts.Select(p => new ViewProductDTO
+                {
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price = p.Price,
+                    Stock = p.Stock
+                }).ToList();
+
+
                 return Ok(products);
             }
             catch (KeyNotFoundException ex)
@@ -375,6 +324,106 @@ namespace E_CommerceApp.Controllers
                 return StatusCode(500, new { message = "An unexpected error occured", detail = ex.Message });
             }
         }
+
+
+
+
+        [HttpGet("Search")]
+        [Authorize]
+        public async Task<IActionResult> Search(string searchQuery, int pageNumber = 1) {
+            try {
+                var products = await _productService.SearchProducts(false, searchQuery, pageNumber);
+                var productsDTO = products.Select(p => new ViewProductDTO
+                {
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price = p.Price,
+                    Stock = p.Stock
+                }).ToList();
+                return Ok(productsDTO);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occured", detail = ex.Message });
+            }
+        }
+
+        
+        [HttpGet("Filtered-Search")]
+        //[Authorize]
+        public async Task<IActionResult> FilteredSearch(string? categoryName, decimal? minPrice, decimal? maxPrice, int? sort, bool? asc, string searchQuery, int pageNumber = 1) {
+            try
+            {
+                var products = await _productService.SearchProducts(true, searchQuery, pageNumber);
+
+                //Filtering ->
+                List<Product> filteredProducts;
+
+                if (!string.IsNullOrEmpty(categoryName))
+                {
+                    if (minPrice.HasValue && maxPrice.HasValue)
+                    {
+                        filteredProducts = products.Where(product => product.Price >= minPrice.Value && product.Price <= maxPrice.Value)
+                                               .Where(product => product.ProductCategories.Any(pc => pc.Category.Name == categoryName))
+                                               .ToList();
+                    }
+                    else
+                    {
+                        filteredProducts = products.Where(product => product.ProductCategories.Any(pc => pc.Category.Name == categoryName))
+                            .ToList();
+                    }
+                }
+                else if (minPrice.HasValue && maxPrice.HasValue)
+                {
+                    filteredProducts = products.Where(product => product.Price >= minPrice.Value && product.Price <= maxPrice.Value)
+                        .ToList();
+                }
+                else
+                {
+                    return BadRequest("Must choose a filter (category or price range).");
+                }
+
+                if (sort.HasValue)
+                {
+                    if (sort.Value < 1 || sort.Value > 2) return BadRequest("Sorting type not valid");
+                    if (!asc.HasValue) return BadRequest("Must choose sorting order");
+                    if (sort.Value == 1)
+                    {
+                        filteredProducts = _productService.SortProductsPrice(filteredProducts, asc.Value);
+                    }
+                    if (sort.Value == 2)
+                    {
+                        filteredProducts = _productService.SortProductsReviews(filteredProducts, asc.Value);
+                    }
+                }
+
+                if (filteredProducts.Count == 0) return NotFound("No products found");
+
+                var productsDTO = filteredProducts.Select(p => new ViewProductDTO
+                {
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price = p.Price,
+                    Stock = p.Stock
+                }).ToList();
+
+                return Ok(productsDTO);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An unexpected error occured", detail = ex.Message });
+            }
+        }
+        
+        
 
 
     }

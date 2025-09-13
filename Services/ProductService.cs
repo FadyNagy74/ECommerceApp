@@ -116,32 +116,36 @@ namespace E_CommerceApp.Services
             return products;
         }
 
-        public async Task<List<Product>> GetProductsSorted(bool asc, int pageNumber) {
-            List<Product> products = new List<Product>();
-            if (asc) {
-                products = await _productRepository.GetProductsSortedAsc(pageNumber);
-            }
-            else
-            {
-                products = await _productRepository.GetProductsSortedDsc(pageNumber);
-            }
-            if (!products.Any()) throw new KeyNotFoundException($"No products were found");
-            return products;
+
+        public async Task<List<Product>> GetProductsInCategoryAndPriceRange(string categoryName, decimal minPrice, decimal maxPrice,int pageNumber) {
+            List<Product> filteredProducts = new List<Product>();
+            filteredProducts = await _productRepository.GetProductsInCategoryAndPriceRange(categoryName, minPrice, maxPrice, pageNumber);
+            if(!filteredProducts.Any()) throw new KeyNotFoundException($"No products were found");
+            return filteredProducts;
         }
 
-        public async Task<List<ViewProductWithRateDTO>> GetProductsReviewSorted(bool asc, int pageNumber)
-        {
-            List<ViewProductWithRateDTO> products = new List<ViewProductWithRateDTO>();
-            if (asc)
-            {
-                products = await _productRepository.GetProductsSortedReviewAsc(pageNumber);
-            }
-            else
-            {
-                products = await _productRepository.GetProductsSortedReviewDsc(pageNumber);
-            }
-            if (!products.Any()) throw new KeyNotFoundException($"No products were found");
-            return products;
+        public List<Product> SortProductsPrice(List<Product> products, bool asc) {
+            //No need to check for null it will be made sure that it isn't null from caller
+            List<Product> sortedProducts = new List<Product>();
+            if (asc) { sortedProducts = products.OrderBy(product => product.Price).ToList(); }
+            else { sortedProducts = products.OrderByDescending(product => product.Price).ToList(); }
+
+            //OrderBy returns IOrderedEnumerable
+            //IOrderedEnumerable<T> is a sorting recipe that re-applies each time you iterate;
+            //use .ToList() to freeze the sorted results
+            //for example when we add elements to our existing IOrderedEnumerable when we iterate we sort again
+
+            return sortedProducts;
+        }
+
+        public List<Product> SortProductsReviews(List<Product> products, bool asc) {
+
+            List<Product> sortedProducts = new List<Product>();
+
+            if (asc) { sortedProducts = products.OrderBy(product => product.Reviews.Any() ? product.Reviews.Average(review => review.RateValue) : 0).ToList(); }
+            else { sortedProducts = products.OrderByDescending(product => product.Reviews.Any() ? product.Reviews.Average(review => review.RateValue) : 0).ToList(); }
+
+            return sortedProducts;
         }
 
         public async Task<List<Product>> GetAllProducts() {
@@ -150,16 +154,11 @@ namespace E_CommerceApp.Services
             return products;
         }
 
-        public async Task<List<string>> SearchProducts(string query) {
-            var products = await _productRepository.Search(query);
+        public async Task<List<Product>> SearchProducts(bool filtered, string query, int pageNumber) {
+            var products = await _productRepository.Search(filtered ,query, pageNumber);
             if (!products.Any()) throw new KeyNotFoundException("No products were found");
 
-            List<string> productNames = new List<string>();
-            foreach (var product in products)
-            {
-                productNames.Add(product.Name);
-            }
-            return productNames;
+            return products;
         }
 
 

@@ -30,7 +30,7 @@ namespace E_CommerceApp.Controllers
             _addressService = addressService;
         }
 
-        [HttpGet("view-profile")]
+        [HttpGet("Me")]
         [Authorize]
         public async Task<IActionResult> ViewProfile()
         {
@@ -66,7 +66,7 @@ namespace E_CommerceApp.Controllers
 
         //Since UserNames are unique this is doable also UX wise username makes more sense in the url than
         //a guid
-        [HttpGet("view-user-profile/{userName}")]
+        [HttpGet("View-Profile/{userName}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ViewUserProfile(string userName)
         {
@@ -109,7 +109,7 @@ namespace E_CommerceApp.Controllers
         // "too much data at once" problem. Pagination is still needed for scalability.
 
         [Authorize(Roles = "Admin")]
-        [HttpGet("get-all-users")]
+        [HttpGet("GetAll")]
         public async Task<IActionResult> GetAllUsers()
         {
             //No need to track all those entities in memory we project them into a DTO anyways
@@ -136,7 +136,7 @@ namespace E_CommerceApp.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpGet("get-users-paginated")]
+        [HttpGet("GetAllPaginated")]
         public async Task<IActionResult> GetUsersPaginated(int pageNumber = 1)
         {
             //ALWAYS order when paging (paginating) [Specified in official Linq Docs]
@@ -172,7 +172,7 @@ namespace E_CommerceApp.Controllers
             return Ok(users);
         }
 
-        [HttpDelete("delete-account")]
+        [HttpDelete("Delete-Account")]
         [Authorize]
         public async Task<IActionResult> DeleteUser()
         {
@@ -189,7 +189,7 @@ namespace E_CommerceApp.Controllers
         }
 
 
-        [HttpDelete("delete-user/{userName}")]
+        [HttpDelete("Delete-User-Account/{userName}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(string userName)
         {
@@ -206,7 +206,7 @@ namespace E_CommerceApp.Controllers
         }
 
 
-        [HttpPut("update-profile")]
+        [HttpPut("Update-Profile")]
         [Authorize]
         public async Task<IActionResult> UpdateProfile(UserProfileDTO NewProfile)
         {
@@ -245,7 +245,7 @@ namespace E_CommerceApp.Controllers
             return Ok("User Profile Updated");
         }
 
-        [HttpPut("update-user-profile/{userName}")]
+        [HttpPut("Update-User-Profile/{userName}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateProfile(UserProfileDTO NewProfile, string userName)
         {
@@ -283,7 +283,7 @@ namespace E_CommerceApp.Controllers
             return Ok("User Profile Updated");
         }
 
-        [HttpPost("change-password")]
+        [HttpPost("Change-Password")]
         [Authorize]
         public async Task<IActionResult> ChangePassword(ChangePasswordDTO changePasswordDTO) {
             if (ModelState.IsValid) {
@@ -306,7 +306,7 @@ namespace E_CommerceApp.Controllers
             return BadRequest(ModelState);
         }
 
-        [HttpPost("add-address/{address}")]
+        [HttpPost("Add-Address/{address}")]
         [Authorize]
         public async Task<IActionResult> AddAddress(string address) {
 
@@ -325,7 +325,7 @@ namespace E_CommerceApp.Controllers
 
         }
 
-        [HttpDelete("remove-address/{addressId}")]
+        [HttpDelete("Remove-Address/{addressId}")]
         [Authorize]
         public async Task<IActionResult> RemoveAddress(string addressId) {
 
@@ -343,7 +343,7 @@ namespace E_CommerceApp.Controllers
             return BadRequest($"Address {address.Address} was not removed from user {currentUserName}");
         }
 
-        [HttpPut("update-address/")]
+        [HttpPut("Update-Address/")]
         [Authorize]
         public async Task<IActionResult> UpdateAddress(AddressDTO addressDTO) {
 
@@ -362,7 +362,7 @@ namespace E_CommerceApp.Controllers
             return BadRequest("Address was not updated");
         }
 
-        [HttpGet("get-addresses")]
+        [HttpGet("Get-Addresses")]
         [Authorize]
         public async Task<IActionResult> GetAddresses() {
 
@@ -385,7 +385,7 @@ namespace E_CommerceApp.Controllers
 
         }
 
-        [HttpPut("deassign-role")]
+        [HttpPut("Deassign-Role")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeassignRole(UserRoleDTO userRoleDTO) {
 
@@ -411,7 +411,7 @@ namespace E_CommerceApp.Controllers
             return BadRequest(ModelState);
         }
 
-        [HttpPost("assign-role")]
+        [HttpPost("Assign-Role")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AssignRole(UserRoleDTO userRoleDTO)
         {

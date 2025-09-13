@@ -16,8 +16,13 @@ namespace E_CommerceApp.Repositories
         //We might not return anything
 
         public async Task<List<Product>> GetProductsIncategory(string categoryName, int pageNumber) {
+
+            if (pageNumber < 1) pageNumber = 1;
+
             var products = await _dbSet.AsNoTracking()
+                .Include(product => product.Reviews)
                 .Where(product => product.ProductCategories.Any(pc => pc.Category.Name == categoryName))
+                .OrderBy(product => product.Name)
                 .Skip((pageNumber - 1) * 10)
                 .Take(10)
                 .ToListAsync();
@@ -38,104 +43,80 @@ WHERE EXISTS (
 
          */
         public async Task<List<Product>> GetProductsInPriceRange(decimal start, decimal end, int pageNumber) {
+
+            if (pageNumber < 1) pageNumber = 1;
+
             var products = await _dbSet.AsNoTracking()
+                .Include(product => product.Reviews)
                 .Where(product => product.Price >= start && product.Price <= end)
+                .OrderBy(product => product.Name)
                 .Skip((pageNumber - 1) * 10)
                 .Take(10)
                 .ToListAsync();
             return products;
+            //If product has no reviews it will return an empty list and not null
         }
 
-        public async Task<List<Product>> GetProductsSortedAsc(int pageNumber) {
+        public async Task<List<Product>> GetProductsInCategoryAndPriceRange(string categoryName, decimal minPrice, decimal maxPrice, int pageNumber) {
+
+            if (pageNumber < 1) pageNumber = 1;
+
             var products = await _dbSet.AsNoTracking()
-                .OrderBy(product => product.Price)
+                .Include(product => product.Reviews)
+                .Where(product => product.Price >= minPrice && product.Price <= maxPrice)
+                .Where(product => product.ProductCategories.Any(pc => pc.Category.Name == categoryName))
+                .OrderBy(product => product.Name)
                 .Skip((pageNumber - 1) * 10)
                 .Take(10)
                 .ToListAsync();
             return products;
         }
+        //Putting two wheres only makes it more readable SQL Server still chooes the best execution plan
+        //your ordering won't matter
 
-        public async Task<List<Product>> GetProductsSortedDsc(int pageNumber)
+
+        public async Task<List<Product>> Search(bool filtered, string query, int pageNumber)
         {
-            var products = await _dbSet.AsNoTracking()
-                .OrderByDescending(product => product.Price)
-                .Skip((pageNumber - 1) * 10)
-                .Take(10)
-                .ToListAsync();
-            return products;
-        }
+            if (pageNumber < 1) pageNumber = 1;
 
-        public async Task<List<ViewProductWithRateDTO>> GetProductsSortedReviewAsc(int pageNumber) {
-            var products = await _dbSet.AsNoTracking()
-                .Select(product => new ViewProductWithRateDTO
-                {
-                    Name = product.Name,
-                    Description = product.Description,
-                    Price = product.Price,
-                    Stock = product.Stock,
-                    ReviewRate = product.Reviews
-                        .Select(r => (int?)r.RateValue)
-                        .Average() ?? 0
-                    //Order by only orders by a single value and not a whole collection
-                    //so we can't OrderBy(product => (1) product.Reviews.OrderBy(r => r.RateValue))
-                    //Here (1) returns a list of products so we can't OrderBy a list of products
-
-                    //.Select(r => r.RateValue) won't return if something is null and .Average() won't
-                    //understand what to return if something is null
-
-                    //We use .Average() so we get the average of all review rates for a product
-
-                })
-                .OrderBy(x => x.ReviewRate)
-                .Skip((pageNumber - 1) * 10)
-                .Take(10)
-                .ToListAsync();
-            return products;
-        }
-
-        public async Task<List<ViewProductWithRateDTO>> GetProductsSortedReviewDsc(int pageNumber)
-        {
-            var products = await _dbSet.AsNoTracking()
-                .Select(product => new ViewProductWithRateDTO
-                {
-                    Name = product.Name,
-                    Description = product.Description,
-                    Price = product.Price,
-                    Stock = product.Stock,
-                    ReviewRate = product.Reviews
-                        .Select(r => (int?)r.RateValue)
-                        .Average() ?? 0
-                    //Order by only orders by a single value and not a whole collection
-                    //so we can't OrderBy(product => (1) product.Reviews.OrderBy(r => r.RateValue))
-                    //Here (1) returns a list of products so we can't OrderBy a list of products
-                })
-                .OrderByDescending(x => x.ReviewRate)
-                .Skip((pageNumber - 1) * 10)
-                .Take(10)
-                .ToListAsync();
-            return products;
-        }
-
-        public async Task<List<Product>> Search(string query) {
-
-            var products = await _dbSet
-                .FromSqlInterpolated($"EXEC SearchProducts {query}")
+            if (!filtered)
+            {
+                var products = await _dbSet
                 .AsNoTracking()
+                .Include(p => p.Reviews)
+                .Where(p =>
+                    p.Name.Contains(query) ||
+                    p.Description.Contains(query) ||
+                    p.ProductTags.Any(pt => pt.Tag.Name.Contains(query)))
+                .OrderBy(p => p.Name)
+                .Skip((pageNumber - 1) * 10)
+                .Take(10)
                 .ToListAsync();
 
-            //We cannot use Select or any Linq related methods with FromSqlInterpolated
-            //So we return the products first then we bring them into memory and do the actual selection
+                return products;
+            }
+            else
+            {
+                var products = await _dbSet
+                    .AsNoTracking()
+                    .Include(p => p.Reviews)
+                    .Include(p => p.ProductCategories)
+                        .ThenInclude(pc => pc.Category)
+                    .Where(p =>
+                        p.Name.Contains(query) ||
+                        p.Description.Contains(query) ||
+                        p.ProductTags.Any(pt => pt.Tag.Name.Contains(query)))
+                    .OrderBy(p => p.Name)
+                    .Skip((pageNumber - 1) * 10)
+                    .Take(10)
+                    .ToListAsync();
 
-            //FromSqlInterprolated performs a stored procedure that returns only names
-            //EF Core tries to map other fields to the Product model but they are null
-            //So this won't work so we have to select only the name
-
-            //AsNoTracking cannot be used before FromSqlInterpolated
-
-            return products;
+                return products;
+            }
         }
 
-        
+
+
 
 
     }
