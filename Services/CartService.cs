@@ -12,13 +12,11 @@ namespace E_CommerceApp.Services
         private readonly ICartRepository _cartRepository;
         private readonly IProductRepository _productRepository;
         private readonly ICartProductRepository _cartProductRepository;
-        private readonly IApplicationUserRepository _applicationUserRepository;
-        public CartService(ICartRepository cartRepository, IProductRepository productRepository, ICartProductRepository cartProductRepository, IApplicationUserRepository userRepository)
+        public CartService(ICartRepository cartRepository, IProductRepository productRepository, ICartProductRepository cartProductRepository)
         {
             _cartRepository = cartRepository;
             _productRepository = productRepository;
             _cartProductRepository = cartProductRepository;
-            _applicationUserRepository = userRepository;
         }
 
 

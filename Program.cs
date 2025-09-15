@@ -50,9 +50,6 @@ namespace E_CommerceApp
 
             builder.Services.AddScoped<ICartProductRepository, CartProductRepository>();
 
-            builder.Services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
-
-
 
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>

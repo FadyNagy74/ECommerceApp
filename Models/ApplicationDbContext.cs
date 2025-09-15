@@ -20,6 +20,8 @@ namespace E_CommerceApp.Models
 
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartProduct> CartProducts { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; } 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { 
             
         }
@@ -179,6 +181,45 @@ namespace E_CommerceApp.Models
                 .HasForeignKey(cp => cp.CartId);
 
             builder.Entity<CartProduct>().Property(cp => cp.Quantity).HasDefaultValue(0).IsRequired();
+
+            builder.Entity<Order>(entity => 
+            { 
+                entity.Property(order => order.SubTotal).IsRequired().HasColumnType("decimal(9,2)").HasDefaultValue(0.00);
+                entity.Property(order => order.ShippingTotal).IsRequired().HasColumnType("decimal(9,2)").HasDefaultValue(0.00);
+                entity.Property(order => order.Tax).IsRequired().HasColumnType("decimal(9,2)").HasDefaultValue(0);
+                entity.Property(order => order.Total).IsRequired().HasColumnType("decimal(9,2)").HasDefaultValue(0.00);
+                entity.Property(order => order.ShippingAddress).IsRequired();
+                entity.Property(order => order.Status).IsRequired().HasDefaultValue(OrderStatus.Pending);
+            });
+
+            //One-To-Many relation between Order and User where each user could have multiple orders but
+            //each order belongs to one user
+            builder.Entity<Order>()
+               .HasOne(order => order.User)
+               .WithMany(user => user.Orders)
+               .HasForeignKey(order => order.UserId)
+               .OnDelete(DeleteBehavior.SetNull);   //When a user is deleted order stays but user/userid are set to null
+
+            builder.Entity<OrderItem>(entity =>
+            { 
+                entity.Property(oi => oi.UnitPrice).IsRequired().HasColumnType("decimal(9,2)").HasDefaultValue(0.00);
+                entity.Property(oi => oi.Quantity).HasDefaultValue(0).IsRequired();
+            });
+
+            //Many-To-Many relation between an order and its items
+
+            builder.Entity<OrderItem>()
+                .HasOne(orderItem => orderItem.Product)
+                .WithMany(product => product.OrderItems)
+                .HasForeignKey(orderItem => orderItem.ProductId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+
+            builder.Entity<OrderItem>()
+                .HasOne(orderItem => orderItem.Order)
+                .WithMany(order => order.OrderItems)
+                .HasForeignKey(orderItem => orderItem.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
