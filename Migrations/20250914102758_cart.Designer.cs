@@ -4,6 +4,7 @@ using E_CommerceApp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace E_CommerceApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250914102758_cart")]
+    partial class cart
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -134,26 +137,6 @@ namespace E_CommerceApp.Migrations
                         .IsUnique();
 
                     b.ToTable("Carts");
-                });
-
-            modelBuilder.Entity("E_CommerceApp.Models.CartProduct", b =>
-                {
-                    b.Property<string>("ProductId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("CartId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("Quantity")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.HasKey("ProductId", "CartId");
-
-                    b.HasIndex("CartId");
-
-                    b.ToTable("CartProducts");
                 });
 
             modelBuilder.Entity("E_CommerceApp.Models.Category", b =>
@@ -489,25 +472,6 @@ namespace E_CommerceApp.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("E_CommerceApp.Models.CartProduct", b =>
-                {
-                    b.HasOne("E_CommerceApp.Models.Cart", "Cart")
-                        .WithMany("CartProducts")
-                        .HasForeignKey("CartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("E_CommerceApp.Models.Product", "Product")
-                        .WithMany("ProductCarts")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Cart");
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("E_CommerceApp.Models.ProductCategory", b =>
                 {
                     b.HasOne("E_CommerceApp.Models.Category", "Category")
@@ -636,11 +600,6 @@ namespace E_CommerceApp.Migrations
                     b.Navigation("UserAddresses");
                 });
 
-            modelBuilder.Entity("E_CommerceApp.Models.Cart", b =>
-                {
-                    b.Navigation("CartProducts");
-                });
-
             modelBuilder.Entity("E_CommerceApp.Models.Category", b =>
                 {
                     b.Navigation("ProductCategories");
@@ -653,8 +612,6 @@ namespace E_CommerceApp.Migrations
 
             modelBuilder.Entity("E_CommerceApp.Models.Product", b =>
                 {
-                    b.Navigation("ProductCarts");
-
                     b.Navigation("ProductCategories");
 
                     b.Navigation("ProductTags");

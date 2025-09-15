@@ -45,6 +45,14 @@ namespace E_CommerceApp
             builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
             builder.Services.AddScoped<ReviewService>();
 
+            builder.Services.AddScoped<ICartRepository, CartRepository>();
+            builder.Services.AddScoped<CartService>();
+
+            builder.Services.AddScoped<ICartProductRepository, CartProductRepository>();
+
+            builder.Services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
+
+
 
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>

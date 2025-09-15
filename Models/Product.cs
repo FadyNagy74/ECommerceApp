@@ -16,7 +16,7 @@ namespace E_CommerceApp.Models
 
         public ICollection<ProductTag> ProductTags { get; set; } = new List<ProductTag>();
         public ICollection<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
-
+        public ICollection<CartProduct> ProductCarts { get; set; } = new List<CartProduct>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
 
         public Product() { 

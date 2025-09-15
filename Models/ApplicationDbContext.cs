@@ -17,6 +17,9 @@ namespace E_CommerceApp.Models
         public DbSet<Category> Catrgories { get; set; }
         public DbSet<ProductCategory> ProductCategories { get; set; }
         public DbSet<Review> Reviews { get; set; }    
+
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartProduct> CartProducts { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { 
             
         }
@@ -58,6 +61,7 @@ namespace E_CommerceApp.Models
             }
             );
 
+            //One-To-Many relationship between User and UserAddress each user has many addresses
             builder.Entity<ApplicationUser>()
                 .HasOne(user => user.City)
                 .WithMany(city => city.Users)
@@ -90,6 +94,8 @@ namespace E_CommerceApp.Models
             builder.Entity<Tag>().Property(tag => tag.Name).IsRequired().HasMaxLength(50);
             builder.Entity<Tag>().HasIndex(tag => tag.Name).IsUnique();
 
+            //Many-To-Many relationship between a product and a tag using ProductTags table
+
             builder.Entity<ProductTag>()
                 .HasKey(pt => new { pt.ProductId, pt.TagId }); // composite key
 
@@ -117,12 +123,14 @@ namespace E_CommerceApp.Models
                 
             });
 
+            //One-To-Many between Review and User each user has many reviews
             builder.Entity<Review>()
                 .HasOne(review => review.User)
                 .WithMany(user => user.Reviews)
                 .HasForeignKey(review => review.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            //One-To-Many between Review and Product each product has many reviews
             builder.Entity<Review>()
                 .HasOne(review => review.Product)
                 .WithMany(product => product.Reviews)
@@ -133,7 +141,7 @@ namespace E_CommerceApp.Models
             builder.Entity<Category>().HasIndex(category => category.Name).IsUnique();
 
             builder.Entity<ProductCategory>()
-                .HasKey(pc => new { pc.ProductId, pc.CategoryId }); // composite key
+                .HasKey(pc => new { pc.ProductId, pc.CategoryId }); // Composite key
 
             builder.Entity<ProductCategory>()
                 .HasOne(pc => pc.Product)
@@ -147,6 +155,30 @@ namespace E_CommerceApp.Models
                 .HasForeignKey(pc => pc.CategoryId); //One-To-Many from category to productcategory
                                                      //Category has many rows in productcategories but each productcategory belongs to one category
 
+            builder.Entity<Cart>().Property(cart => cart.TotalPrice).HasColumnType("decimal(9,2)").HasDefaultValue(0.00).IsRequired();
+
+            //One-To-One between Cart and User, Cart is the owning Entity meaning it has the foreign-key
+            //In other words A Cart needs a user to be created
+            builder.Entity<Cart>()
+                .HasOne(cart => cart.User)
+                .WithOne(user => user.Cart)
+                .HasForeignKey<Cart>(cart => cart.UserId);
+
+            //Many-To-Many with cart and product using CartProduct
+            builder.Entity<CartProduct>()
+                .HasKey(cp => new { cp.ProductId, cp.CartId }); // Composite key
+
+            builder.Entity<CartProduct>()
+                .HasOne(cp => cp.Product)
+                .WithMany(product => product.ProductCarts)
+                .HasForeignKey(cp => cp.ProductId);
+
+            builder.Entity<CartProduct>()
+                .HasOne(cp => cp.Cart)
+                .WithMany(c => c.CartProducts)
+                .HasForeignKey(cp => cp.CartId);
+
+            builder.Entity<CartProduct>().Property(cp => cp.Quantity).HasDefaultValue(0).IsRequired();
         }
     }
 }
