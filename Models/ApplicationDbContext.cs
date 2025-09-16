@@ -220,6 +220,8 @@ namespace E_CommerceApp.Models
                 .WithMany(order => order.OrderItems)
                 .HasForeignKey(orderItem => orderItem.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+
         }
     }
 }

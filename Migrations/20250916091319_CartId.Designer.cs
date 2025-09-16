@@ -4,6 +4,7 @@ using E_CommerceApp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace E_CommerceApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250916091319_CartId")]
+    partial class CartId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -136,7 +139,7 @@ namespace E_CommerceApp.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Carts", (string)null);
+                    b.ToTable("Carts");
                 });
 
             modelBuilder.Entity("E_CommerceApp.Models.CartProduct", b =>
@@ -156,7 +159,7 @@ namespace E_CommerceApp.Migrations
 
                     b.HasIndex("CartId");
 
-                    b.ToTable("CartProducts", (string)null);
+                    b.ToTable("CartProducts");
                 });
 
             modelBuilder.Entity("E_CommerceApp.Models.Category", b =>
@@ -174,7 +177,7 @@ namespace E_CommerceApp.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("E_CommerceApp.Models.City", b =>
@@ -188,7 +191,7 @@ namespace E_CommerceApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cities", (string)null);
+                    b.ToTable("Cities");
                 });
 
             modelBuilder.Entity("E_CommerceApp.Models.Order", b =>
@@ -235,7 +238,7 @@ namespace E_CommerceApp.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("E_CommerceApp.Models.OrderItem", b =>
@@ -266,7 +269,7 @@ namespace E_CommerceApp.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("E_CommerceApp.Models.Product", b =>
@@ -296,7 +299,7 @@ namespace E_CommerceApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("E_CommerceApp.Models.ProductCategory", b =>
@@ -311,7 +314,7 @@ namespace E_CommerceApp.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("ProductCategories", (string)null);
+                    b.ToTable("ProductCategories");
                 });
 
             modelBuilder.Entity("E_CommerceApp.Models.ProductTag", b =>
@@ -326,7 +329,7 @@ namespace E_CommerceApp.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("ProductTags", (string)null);
+                    b.ToTable("ProductTags");
                 });
 
             modelBuilder.Entity("E_CommerceApp.Models.Review", b =>
@@ -367,7 +370,7 @@ namespace E_CommerceApp.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reviews", null, t =>
+                    b.ToTable("Reviews", t =>
                         {
                             t.HasCheckConstraint("CK_Review_RateValue", "[RateValue] BETWEEN 1 AND 5");
                         });
@@ -388,7 +391,7 @@ namespace E_CommerceApp.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Tags", (string)null);
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("E_CommerceApp.Models.UserAddress", b =>
@@ -411,7 +414,7 @@ namespace E_CommerceApp.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserAddresses", (string)null);
+                    b.ToTable("UserAddresses");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

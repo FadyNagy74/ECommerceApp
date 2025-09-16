@@ -17,6 +17,7 @@ namespace E_CommerceApp.Models
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<Order> Orders { get; set; } = new List<Order>();
         public Cart? Cart { get; set; }
+        public string? CartId { get; set; }
 
 
         public ApplicationUser() {

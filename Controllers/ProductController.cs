@@ -224,7 +224,7 @@ namespace E_CommerceApp.Controllers
 
 
         [HttpGet("View/{productId}")]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> ViewProduct(string productId) {
             try
             {
@@ -354,7 +354,7 @@ namespace E_CommerceApp.Controllers
 
         
         [HttpGet("Filtered-Search")]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> FilteredSearch(string? categoryName, decimal? minPrice, decimal? maxPrice, int? sort, bool? asc, string searchQuery, int pageNumber = 1) {
             try
             {

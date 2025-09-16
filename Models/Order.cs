@@ -16,6 +16,7 @@ namespace E_CommerceApp.Models
         public string? UserId { get; set; }
         public ApplicationUser? User { get; set; }
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+
         public Order() { 
             Id = Guid.NewGuid().ToString();
             PlacedAt = DateTime.UtcNow;
