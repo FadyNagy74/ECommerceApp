@@ -137,3 +137,4 @@ D:\.NET Projects\E-Commerce Application\E-CommerceApp\E-CommerceApp\obj\Debug\ne
 D:\.NET Projects\E-Commerce Application\E-CommerceApp\E-CommerceApp\obj\Debug\net8.0\E-CommerceApp.genruntimeconfig.cache
 D:\.NET Projects\E-Commerce Application\E-CommerceApp\E-CommerceApp\obj\Debug\net8.0\ref\E-CommerceApp.dll
 D:\.NET Projects\E-Commerce Application\E-CommerceApp\E-CommerceApp\obj\Debug\net8.0\E-CommerceApp.sourcelink.json
+D:\.NET Projects\E-Commerce Application\E-CommerceApp\E-CommerceApp\bin\Debug\net8.0\RabbitMQ.Client.dll

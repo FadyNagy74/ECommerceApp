@@ -22,6 +22,7 @@ namespace E_CommerceApp.Models
         public DbSet<CartProduct> CartProducts { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; } 
+        public DbSet<Notification> Notifications { get; set; }  
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { 
             
         }
@@ -221,6 +222,18 @@ namespace E_CommerceApp.Models
                 .HasForeignKey(orderItem => orderItem.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            builder.Entity<Notification>(entity =>
+            {
+                entity.Property(notification => notification.Message).HasMaxLength(1000).IsRequired();
+                entity.Property(notification => notification.IsRead).HasDefaultValue(false);
+                entity.Property(notification => notification.CreatedAt).IsRequired();
+            });
+
+            builder.Entity<Notification>()
+               .HasOne(notification => notification.User)
+               .WithMany(user => user.Notifications)
+               .HasForeignKey(notification => notification.UserId)
+               .OnDelete(DeleteBehavior.Cascade);
 
         }
     }

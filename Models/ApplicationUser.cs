@@ -16,6 +16,7 @@ namespace E_CommerceApp.Models
         public ICollection<UserAddress> UserAddresses { get; set; } = new List<UserAddress>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<Order> Orders { get; set; } = new List<Order>();
+        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
         public Cart? Cart { get; set; }
         public string? CartId { get; set; }
 

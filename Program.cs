@@ -1,5 +1,6 @@
 
 using E_CommerceApp.Models;
+using E_CommerceApp.RabbitMQ;
 using E_CommerceApp.Repositories;
 using E_CommerceApp.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -56,6 +57,11 @@ namespace E_CommerceApp
             builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
 
             builder.Services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
+
+            builder.Services.Configure<RabbitMQConfiguration>(
+                builder.Configuration.GetSection("RabbitMQ"));
+
+            builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
 
 
 
