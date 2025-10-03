@@ -7,43 +7,42 @@ classDiagram
     class ApplicationUser
     class Order
 
-    interface IRepository~T~ {
-        +void Add(T entity)
-        +Task~T?~ GetByIdAsync(string Id)
-        +Task~List~ GetAllAsync()
-        +void Update(T entity)
-        +void Remove(T entity)
-        +Task~int~ SaveChangesAsync()
+    interface IRepository_Generic {
+        +void Add(entity)
+        +Task GetByIdAsync(Id)
+        +Task GetAllAsync()
+        +void Update(entity)
+        +void Remove(entity)
+        +Task SaveChangesAsync()
     }
 
-    class Repository~T~ {
+    class Repository_Generic {
         #DbContext _context
-        #DbSet~T~ _dbSet
+        #DbSet _dbSet
         +Repository(DbContext context)
-        +void Add(T entity)
-        +Task~T?~ GetByIdAsync(string Id)
-        +Task~List~ GetAllAsync()
-        +void Update(T entity)
-        +void Remove(T entity)
-        +Task~int~ SaveChangesAsync()
+        +void Add(entity)
+        +Task GetByIdAsync(Id)
+        +Task GetAllAsync()
+        +void Update(entity)
+        +void Remove(entity)
+        +Task SaveChangesAsync()
     }
 
     interface IApplicationUserRepository {
-        +Task~ApplicationUser~ FindUserByIdAsync(string userId)
-        +Task~List~ FindUserOrders(string userId)
+        +Task FindUserByIdAsync(userId)
+        +Task FindUserOrders(userId)
     }
 
     class ApplicationUserRepository {
         +ApplicationUserRepository(ApplicationDbContext context)
-        +Task~ApplicationUser?~ FindUserByIdAsync(string userId)
-        +Task~List~ FindUserOrders(string userId)
+        +Task FindUserByIdAsync(userId)
+        +Task FindUserOrders(userId)
     }
 
-    IRepository <|.. Repository : implements
-    IApplicationUserRepository <|-- IRepository : extends(ApplicationUser)
-    ApplicationUserRepository <|-- IApplicationUserRepository : implements
-    Repository <|-- ApplicationUserRepository : inherits(ApplicationUser)
+    IRepository_Generic <|.. Repository_Generic : implements
+    IApplicationUserRepository <|.. ApplicationUserRepository : implements
+    Repository_Generic <|-- ApplicationUserRepository : inherits
 
     DbContext <|-- ApplicationDbContext : inherits
-    Repository o-- DbContext : uses/injects
+    Repository_Generic o-- DbContext : uses/injects
     ApplicationUserRepository o-- ApplicationDbContext : uses/injects
